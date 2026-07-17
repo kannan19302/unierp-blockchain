@@ -1,0 +1,24 @@
+{
+  "name": "procurement-chaincode",
+  "version": "1.0.0",
+  "description": "UniERP Procurement Lifecycle Smart Contract",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "start:server": "fabric-chaincode-node server --chaincode-address=0.0.0.0:9996 --chaincode-id=procurement-lifecycle",
+    "test": "mocha --require ts-node/register src/**/*.spec.ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "fabric-shim": "^2.2.8",
+    "fabric-contract-api": "^2.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "mocha": "^10.2.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.7.0",
+    "rimraf": "^6.0.0"
+  }
+}

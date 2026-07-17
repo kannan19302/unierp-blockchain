@@ -1,0 +1,256 @@
+# =============================================================================
+# UniERP — Hyperledger Fabric Development Network
+# =============================================================================
+# This Docker Compose file defines the Fabric network components for
+# local development. It is designed to extend the main docker-compose.dev.yml.
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml -f packages/blockchain/network/docker-compose.fabric.yml up -d
+#
+# Or standalone (for blockchain-only testing):
+#   docker compose -f packages/blockchain/network/docker-compose.fabric.yml up -d
+#
+# Ports:
+#   7050  — Orderer (RAFT)
+#   7051  — Peer (Org1)
+#   7054  — Certificate Authority (Org1)
+#   5984  — CouchDB (Fabric world state)
+#   8090  — Hyperledger Explorer (UI)
+# =============================================================================
+
+version: '3.9'
+
+networks:
+  fabric-network:
+    name: unerp_fabric_network
+    driver: bridge
+
+volumes:
+  orderer-data:
+  peer-data:
+  couchdb-data:
+  explorer-data:
+
+services:
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Certificate Authority — Org1 (UniERP Tenant Org)
+  # ─────────────────────────────────────────────────────────────────────────
+  ca.org1.unerp.local:
+    image: hyperledger/fabric-ca:1.5
+    container_name: ca_org1
+    environment:
+      - FABRIC_CA_HOME=/etc/hyperledger/fabric-ca-server
+      - FABRIC_CA_SERVER_CA_NAME=ca-org1
+      - FABRIC_CA_SERVER_TLS_ENABLED=true
+      - FABRIC_CA_SERVER_PORT=7054
+      - FABRIC_CA_SERVER_CSR_HOSTS=ca.org1.unerp.local,localhost
+      # Default admin credentials — override in production via secrets
+      - FABRIC_CA_SERVER_CA_CERTFILE=/etc/hyperledger/fabric-ca-server-config/ca.org1.unerp.local-cert.pem
+      - FABRIC_CA_SERVER_CA_KEYFILE=/etc/hyperledger/fabric-ca-server-config/priv_sk
+    volumes:
+      - ./crypto-config/peerOrganizations/org1.unerp.local/ca:/etc/hyperledger/fabric-ca-server-config
+      - ./crypto-config:/etc/hyperledger/fabric-ca-server
+    ports:
+      - "7054:7054"
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "fabric-ca-client", "getcainfo", "-u", "https://localhost:7054", "--tls.certfiles", "/etc/hyperledger/fabric-ca-server-config/ca.org1.unerp.local-cert.pem"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # CouchDB — Fabric Peer World State Database
+  # ─────────────────────────────────────────────────────────────────────────
+  couchdb0:
+    image: couchdb:3.3
+    container_name: couchdb0
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=adminpw
+    volumes:
+      - couchdb-data:/opt/couchdb/data
+    ports:
+      - "5984:5984"
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5984/"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Orderer — Single RAFT orderer for development
+  # ─────────────────────────────────────────────────────────────────────────
+  orderer.unerp.local:
+    image: hyperledger/fabric-orderer:2.5
+    container_name: orderer.unerp.local
+    environment:
+      - FABRIC_LOGGING_SPEC=INFO
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_CLUSTER_CLIENTCERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_CLUSTER_CLIENTPRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_CLUSTER_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_GENERAL_BOOTSTRAPMETHOD=none
+      - ORDERER_CHANNELPARTICIPATION_ENABLED=true
+      - ORDERER_ADMIN_TLS_ENABLED=true
+      - ORDERER_ADMIN_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_ADMIN_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_ADMIN_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_TLS_CLIENTROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+      - ORDERER_ADMIN_LISTENADDRESS=0.0.0.0:7053
+      - ORDERER_OPERATIONS_LISTENADDRESS=orderer.unerp.local:9443
+    volumes:
+      - orderer-data:/var/hyperledger/production/orderer
+      - ./crypto-config/ordererOrganizations/unerp.local/orderers/orderer.unerp.local/msp:/var/hyperledger/orderer/msp
+      - ./crypto-config/ordererOrganizations/unerp.local/orderers/orderer.unerp.local/tls:/var/hyperledger/orderer/tls
+    ports:
+      - "7050:7050"
+      - "7053:7053"
+      - "9443:9443"
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=localhost:7050"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Peer — Org1 primary peer
+  # ─────────────────────────────────────────────────────────────────────────
+  peer0.org1.unerp.local:
+    image: hyperledger/fabric-peer:2.5
+    container_name: peer0.org1.unerp.local
+    environment:
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=unerp_fabric_network
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_PEER_ID=peer0.org1.unerp.local
+      - CORE_PEER_ADDRESS=peer0.org1.unerp.local:7051
+      - CORE_PEER_LISTENADDRESS=0.0.0.0:7051
+      - CORE_PEER_CHAINCODEADDRESS=peer0.org1.unerp.local:7052
+      - CORE_PEER_CHAINCODELISTENADDRESS=0.0.0.0:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org1.unerp.local:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.unerp.local:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_MSPCONFIGPATH=/etc/hyperledger/fabric/msp
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.org1.unerp.local:9444
+      - CORE_LEDGER_STATE_STATEDATABASE=CouchDB
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_COUCHDBADDRESS=couchdb0:5984
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_USERNAME=admin
+      - CORE_LEDGER_STATE_COUCHDBCONFIG_PASSWORD=adminpw
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - peer-data:/var/hyperledger/production
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config/peerOrganizations/org1.unerp.local/peers/peer0.org1.unerp.local/msp:/etc/hyperledger/fabric/msp
+      - ./crypto-config/peerOrganizations/org1.unerp.local/peers/peer0.org1.unerp.local/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - "7051:7051"
+      - "9444:9444"
+    depends_on:
+      couchdb0:
+        condition: service_healthy
+      orderer.unerp.local:
+        condition: service_started
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD", "grpc_health_probe", "-addr=localhost:7051"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # CLI — Admin tool for channel/chaincode operations
+  # ─────────────────────────────────────────────────────────────────────────
+  cli:
+    image: hyperledger/fabric-tools:2.5
+    container_name: fabric_cli
+    tty: true
+    stdin_open: true
+    environment:
+      - GOPATH=/opt/gopath
+      - CORE_VM_ENDPOINT=unix:///host/var/run/docker.sock
+      - FABRIC_LOGGING_SPEC=INFO
+      - CORE_PEER_ID=cli
+      - CORE_PEER_ADDRESS=peer0.org1.unerp.local:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_PEER_TLS_ENABLED=true
+      - CORE_PEER_TLS_CERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.unerp.local/peers/peer0.org1.unerp.local/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.unerp.local/peers/peer0.org1.unerp.local/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.unerp.local/peers/peer0.org1.unerp.local/tls/ca.crt
+      - CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.unerp.local/users/Admin@org1.unerp.local/msp
+      - ORDERER_CA=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/ordererOrganizations/unerp.local/orderers/orderer.unerp.local/msp/tlscacerts/tlsca.unerp.local-cert.pem
+    volumes:
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - ./crypto-config:/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/
+      - ./channel-artifacts:/opt/gopath/src/github.com/hyperledger/fabric/peer/channel-artifacts
+      - ../chaincode:/opt/gopath/src/github.com/chaincode
+    working_dir: /opt/gopath/src/github.com/hyperledger/fabric/peer
+    depends_on:
+      - peer0.org1.unerp.local
+    networks:
+      - fabric-network
+    command: /bin/bash
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Hyperledger Explorer — Visual Block Explorer UI
+  # ─────────────────────────────────────────────────────────────────────────
+  explorer:
+    image: ghcr.io/hyperledger-labs/explorer:latest
+    container_name: fabric_explorer
+    environment:
+      - DATABASE_HOST=explorerdb
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+      - LOG_LEVEL_APP=debug
+      - LOG_LEVEL_DB=debug
+      - LOG_LEVEL_CONSOLE=info
+      - LOG_CONSOLE_STDOUT=true
+      - DISCOVERY_AS_LOCALHOST=false
+    volumes:
+      - ./explorer-config.json:/opt/explorer/app/platform/fabric/config.json
+      - ./crypto-config:/tmp/crypto
+      - explorer-data:/opt/explorer/wallet
+    ports:
+      - "8090:8080"
+    depends_on:
+      - explorerdb
+      - peer0.org1.unerp.local
+    networks:
+      - fabric-network
+
+  explorerdb:
+    image: ghcr.io/hyperledger-labs/explorer-db:latest
+    container_name: fabric_explorerdb
+    environment:
+      - DATABASE_DATABASE=fabricexplorer
+      - DATABASE_USERNAME=hppoc
+      - DATABASE_PASSWD=password
+    volumes:
+      - ./explorerdb-data:/var/lib/postgresql/data
+    networks:
+      - fabric-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hppoc -d fabricexplorer"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
