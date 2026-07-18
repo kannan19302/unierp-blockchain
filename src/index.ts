@@ -6,14 +6,14 @@
  */
 
 // Fabric connection infrastructure
-export { FabricConnectionService } from './fabric/connection';
-export type { FabricConnectionConfig } from './fabric/connection';
+export { FabricConnectionService } from './fabric/connection.js';
+export type { FabricConnectionConfig } from './fabric/connection.js';
 
-export { BlockchainEventListener } from './fabric/events';
-export type { ChaincodeEventHandler, EventListenerConfig } from './fabric/events';
+export { BlockchainEventListener } from './fabric/events.js';
+export type { ChaincodeEventHandler, EventListenerConfig } from './fabric/events.js';
 
-export { FABRIC_CHANNELS, FABRIC_CHAINCODES, CHAINCODE_CHANNEL_MAP } from './fabric/channels';
-export type { FabricChannel, FabricChaincode } from './fabric/channels';
+export { FABRIC_CHANNELS, FABRIC_CHAINCODES, CHAINCODE_CHANNEL_MAP } from './fabric/channels.js';
+export type { FabricChannel, FabricChaincode } from './fabric/channels.js';
 
 // DTOs and enums
 export {
@@ -21,7 +21,7 @@ export {
   VerificationResult,
   BlockchainEntityType,
   computePayloadHash,
-} from './dto/blockchain-transaction.dto';
+} from './dto/blockchain-transaction.dto.js';
 
 export type {
   SubmitToBlockchainDto,
@@ -29,7 +29,7 @@ export type {
   VerifyOnChainDto,
   BlockchainVerificationResponse,
   OnChainRecord,
-} from './dto/blockchain-transaction.dto';
+} from './dto/blockchain-transaction.dto.js';
 
 // Typed contract wrappers
 export {
@@ -38,11 +38,11 @@ export {
   FinanceLedgerContract,
   SupplyChainTraceabilityContract,
   ProcurementLifecycleContract,
-} from './contracts/index';
+} from './contracts/index.js';
 
 export type {
   DocumentRegistryArgs,
   FinanceLedgerArgs,
   SupplyChainArgs,
   ProcurementArgs,
-} from './contracts/index';
+} from './contracts/index.js';

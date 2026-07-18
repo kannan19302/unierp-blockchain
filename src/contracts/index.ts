@@ -10,7 +10,7 @@
  */
 
 import { Contract } from '@hyperledger/fabric-gateway';
-import { OnChainRecord } from '../dto/blockchain-transaction.dto';
+import { OnChainRecord } from '../dto/blockchain-transaction.dto.js';
 
 // ──────────────────────────────────────────────────────────────
 // Base contract wrapper
