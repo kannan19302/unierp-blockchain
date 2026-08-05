@@ -16,6 +16,11 @@
   "exclude": [
     "node_modules",
     "dist",
-    "chaincode"
+    "**/*.spec.ts",
+    "**/*.spec.tsx",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.stories.tsx",
+    "**/__tests__/**"
   ]
 }
