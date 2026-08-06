@@ -1,6 +1,6 @@
 {
   "name": "@unerp/blockchain",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "UniERP Blockchain Integration — Hyperledger Fabric hybrid layer",
   "type": "module",
   "main": "./dist/index.js",
@@ -41,14 +41,14 @@
     "crypto": "^1.0.1"
   },
   "devDependencies": {
-    "@unerp/config": "^1.0.1",
+    "@unerp/config": "^1.0.2",
     "@types/node": "^22.0.0",
     "typescript": "^5.7.0",
     "vitest": "^2.1.0",
     "rimraf": "^6.0.0"
   },
   "peerDependencies": {
-    "@unerp/shared": "^1.0.0"
+    "@unerp/shared": "^1.0.5"
   },
   "files": [
     "dist",

@@ -12,37 +12,39 @@ export const FABRIC_CHANNELS = {
    * Contains: document-registry, finance-ledger chaincodes.
    * Participants: UniERP tenant org only (single-org for Phase 0-2).
    */
-  UNERP_MAIN: 'unerp-channel',
+  UNERP_MAIN: "unerp-channel",
 
   /**
    * Supply chain traceability channel.
    * Contains: supply-chain chaincode.
    * Participants: UniERP + Supplier orgs + Carrier orgs (multi-org, Phase 3).
    */
-  SUPPLY_CHAIN: 'supplychain-channel',
+  SUPPLY_CHAIN: "supplychain-channel",
 
   /**
    * Procurement smart contract channel.
    * Contains: procurement chaincode.
    * Participants: UniERP + Vendor orgs (multi-org, Phase 4).
    */
-  PROCUREMENT: 'procurement-channel',
+  PROCUREMENT: "procurement-channel",
 } as const;
 
-export type FabricChannel = (typeof FABRIC_CHANNELS)[keyof typeof FABRIC_CHANNELS];
+export type FabricChannel =
+  (typeof FABRIC_CHANNELS)[keyof typeof FABRIC_CHANNELS];
 
 /**
  * Chaincode names deployed on each channel.
  * Keep in sync with network/scripts/deploy-chaincode.sh.
  */
 export const FABRIC_CHAINCODES = {
-  DOCUMENT_REGISTRY: 'document-registry',
-  FINANCE_LEDGER: 'finance-ledger',
-  SUPPLY_CHAIN: 'supply-chain-traceability',
-  PROCUREMENT: 'procurement-lifecycle',
+  DOCUMENT_REGISTRY: "document-registry",
+  FINANCE_LEDGER: "finance-ledger",
+  SUPPLY_CHAIN: "supply-chain-traceability",
+  PROCUREMENT: "procurement-lifecycle",
 } as const;
 
-export type FabricChaincode = (typeof FABRIC_CHAINCODES)[keyof typeof FABRIC_CHAINCODES];
+export type FabricChaincode =
+  (typeof FABRIC_CHAINCODES)[keyof typeof FABRIC_CHAINCODES];
 
 /**
  * Maps each chaincode to its default channel.

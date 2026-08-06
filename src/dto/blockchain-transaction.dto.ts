@@ -11,18 +11,18 @@
 // ──────────────────────────────────────────────────────────────
 
 export enum BlockchainTxStatus {
-  PENDING = 'PENDING',
-  SUBMITTED = 'SUBMITTED',
-  CONFIRMED = 'CONFIRMED',
-  FAILED = 'FAILED',
-  RETRYING = 'RETRYING',
+  PENDING = "PENDING",
+  SUBMITTED = "SUBMITTED",
+  CONFIRMED = "CONFIRMED",
+  FAILED = "FAILED",
+  RETRYING = "RETRYING",
 }
 
 export enum VerificationResult {
-  VERIFIED = 'VERIFIED',
-  TAMPERED = 'TAMPERED',
-  NOT_FOUND = 'NOT_FOUND',
-  NETWORK_ERROR = 'NETWORK_ERROR',
+  VERIFIED = "VERIFIED",
+  TAMPERED = "TAMPERED",
+  NOT_FOUND = "NOT_FOUND",
+  NETWORK_ERROR = "NETWORK_ERROR",
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -31,23 +31,23 @@ export enum VerificationResult {
 
 export enum BlockchainEntityType {
   /** Document hash registration */
-  DOCUMENT = 'DOCUMENT',
+  DOCUMENT = "DOCUMENT",
   /** GL journal entry hash */
-  GL_JOURNAL = 'GL_JOURNAL',
+  GL_JOURNAL = "GL_JOURNAL",
   /** Period-end close attestation */
-  PERIOD_CLOSE = 'PERIOD_CLOSE',
+  PERIOD_CLOSE = "PERIOD_CLOSE",
   /** Inter-company netting proof */
-  INTERCOMPANY_NETTING = 'INTERCOMPANY_NETTING',
+  INTERCOMPANY_NETTING = "INTERCOMPANY_NETTING",
   /** Shipment/ASN tracking event */
-  SHIPMENT = 'SHIPMENT',
+  SHIPMENT = "SHIPMENT",
   /** Purchase order lifecycle */
-  PURCHASE_ORDER = 'PURCHASE_ORDER',
+  PURCHASE_ORDER = "PURCHASE_ORDER",
   /** Inventory batch event */
-  INVENTORY_BATCH = 'INVENTORY_BATCH',
+  INVENTORY_BATCH = "INVENTORY_BATCH",
   /** Fixed asset lifecycle event */
-  FIXED_ASSET = 'FIXED_ASSET',
+  FIXED_ASSET = "FIXED_ASSET",
   /** Marketplace plugin integrity */
-  MARKETPLACE_PLUGIN = 'MARKETPLACE_PLUGIN',
+  MARKETPLACE_PLUGIN = "MARKETPLACE_PLUGIN",
 }
 
 // ──────────────────────────────────────────────────────────────
@@ -136,7 +136,7 @@ export interface OnChainRecord {
  * Keys are sorted to ensure consistency regardless of insertion order.
  */
 export function computePayloadHash(payload: Record<string, unknown>): string {
-  const { createHash } = require('crypto') as typeof import('crypto');
+  const { createHash } = require("crypto") as typeof import("crypto");
   const normalized = JSON.stringify(payload, Object.keys(payload).sort());
-  return createHash('sha256').update(normalized, 'utf8').digest('hex');
+  return createHash("sha256").update(normalized, "utf8").digest("hex");
 }

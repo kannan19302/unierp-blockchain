@@ -9,7 +9,7 @@
  * Performance: never create a new Gateway per request — reuse the long-lived gRPC channel.
  */
 
-import * as grpc from '@grpc/grpc-js';
+import * as grpc from "@grpc/grpc-js";
 import {
   connect,
   Gateway,
@@ -17,10 +17,10 @@ import {
   Contract,
   Identity,
   Signer,
-} from '@hyperledger/fabric-gateway';
-import * as crypto from 'crypto';
-import * as fs from 'fs';
-import * as path from 'path';
+} from "@hyperledger/fabric-gateway";
+import * as crypto from "crypto";
+import * as fs from "fs";
+import * as path from "path";
 
 export interface FabricConnectionConfig {
   /** Path to the peer TLS certificate (PEM) */
@@ -57,7 +57,7 @@ export class FabricConnectionService {
     const tlsCredentials = grpc.credentials.createSsl(tlsRootCert);
 
     this.client = new grpc.Client(this.config.peerEndpoint, tlsCredentials, {
-      'grpc.ssl_target_name_override': this.config.peerHostAlias,
+      "grpc.ssl_target_name_override": this.config.peerHostAlias,
     });
 
     const identity = await this.newIdentity();
@@ -98,7 +98,7 @@ export class FabricConnectionService {
    */
   getNetwork(channelName?: string): Network {
     if (!this.gateway) {
-      throw new Error('Fabric Gateway not connected. Call connect() first.');
+      throw new Error("Fabric Gateway not connected. Call connect() first.");
     }
     return this.gateway.getNetwork(channelName ?? this.config.defaultChannel);
   }
@@ -127,7 +127,7 @@ export class FabricConnectionService {
     const keyPem = await fs.promises.readFile(this.config.keyPath);
     const privateKey = crypto.createPrivateKey(keyPem);
     return async (digest: Uint8Array) => {
-      const sign = crypto.createSign('SHA256');
+      const sign = crypto.createSign("SHA256");
       sign.update(digest);
       return sign.sign(privateKey);
     };
@@ -144,13 +144,13 @@ export class FabricConnectionService {
     };
 
     return {
-      tlsCertPath: required('FABRIC_TLS_CERT_PATH'),
-      peerEndpoint: required('FABRIC_PEER_ENDPOINT'),
-      peerHostAlias: required('FABRIC_PEER_HOST_ALIAS'),
-      mspId: required('FABRIC_MSP_ID'),
-      certPath: required('FABRIC_CERT_PATH'),
-      keyPath: required('FABRIC_KEY_PATH'),
-      defaultChannel: process.env['FABRIC_DEFAULT_CHANNEL'] ?? 'unerp-channel',
+      tlsCertPath: required("FABRIC_TLS_CERT_PATH"),
+      peerEndpoint: required("FABRIC_PEER_ENDPOINT"),
+      peerHostAlias: required("FABRIC_PEER_HOST_ALIAS"),
+      mspId: required("FABRIC_MSP_ID"),
+      certPath: required("FABRIC_CERT_PATH"),
+      keyPath: required("FABRIC_KEY_PATH"),
+      defaultChannel: process.env["FABRIC_DEFAULT_CHANNEL"] ?? "unerp-channel",
     };
   }
 
@@ -160,24 +160,29 @@ export class FabricConnectionService {
   static forLocalTestNetwork(cryptoBasePath: string): FabricConnectionConfig {
     const orgPath = path.join(
       cryptoBasePath,
-      'peerOrganizations',
-      'org1.unerp.local',
+      "peerOrganizations",
+      "org1.unerp.local",
     );
-    const peerPath = path.join(
+    const peerPath = path.join(orgPath, "peers", "peer0.org1.unerp.local");
+    const userPath = path.join(
       orgPath,
-      'peers',
-      'peer0.org1.unerp.local',
+      "users",
+      "User1@org1.unerp.local",
+      "msp",
     );
-    const userPath = path.join(orgPath, 'users', 'User1@org1.unerp.local', 'msp');
 
     return {
-      tlsCertPath: path.join(peerPath, 'tls', 'ca.crt'),
-      peerEndpoint: 'localhost:7051',
-      peerHostAlias: 'peer0.org1.unerp.local',
-      mspId: 'Org1MSP',
-      certPath: path.join(userPath, 'signcerts', 'User1@org1.unerp.local-cert.pem'),
-      keyPath: path.join(userPath, 'keystore', 'priv_sk'),
-      defaultChannel: 'unerp-channel',
+      tlsCertPath: path.join(peerPath, "tls", "ca.crt"),
+      peerEndpoint: "localhost:7051",
+      peerHostAlias: "peer0.org1.unerp.local",
+      mspId: "Org1MSP",
+      certPath: path.join(
+        userPath,
+        "signcerts",
+        "User1@org1.unerp.local-cert.pem",
+      ),
+      keyPath: path.join(userPath, "keystore", "priv_sk"),
+      defaultChannel: "unerp-channel",
     };
   }
 }

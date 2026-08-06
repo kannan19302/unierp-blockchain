@@ -9,8 +9,8 @@
  * submit and query transactions in a type-safe way.
  */
 
-import { Contract } from '@hyperledger/fabric-gateway';
-import { OnChainRecord } from '../dto/blockchain-transaction.dto.js';
+import { Contract } from "@hyperledger/fabric-gateway";
+import { OnChainRecord } from "../dto/blockchain-transaction.dto.js";
 
 // ──────────────────────────────────────────────────────────────
 // Base contract wrapper
@@ -27,7 +27,7 @@ export class TypedContract {
     ...args: string[]
   ): Promise<string> {
     const result = await this.contract.submitTransaction(fcn, ...args);
-    return Buffer.from(result).toString('utf8');
+    return Buffer.from(result).toString("utf8");
   }
 
   protected async evaluateTransaction(
@@ -35,7 +35,7 @@ export class TypedContract {
     ...args: string[]
   ): Promise<string> {
     const result = await this.contract.evaluateTransaction(fcn, ...args);
-    return Buffer.from(result).toString('utf8');
+    return Buffer.from(result).toString("utf8");
   }
 
   protected parseResult<T>(result: string): T {
@@ -72,9 +72,11 @@ export class DocumentRegistryContract extends TypedContract {
    * Register a document hash on the blockchain.
    * Idempotent — re-registering the same documentId with same hash is a no-op.
    */
-  async registerDocument(args: DocumentRegistryArgs['register']): Promise<OnChainRecord> {
+  async registerDocument(
+    args: DocumentRegistryArgs["register"],
+  ): Promise<OnChainRecord> {
     const result = await this.submitTransaction(
-      'RegisterDocument',
+      "RegisterDocument",
       JSON.stringify(args),
     );
     return this.parseResult<OnChainRecord>(result);
@@ -84,13 +86,16 @@ export class DocumentRegistryContract extends TypedContract {
    * Verify a document's authenticity by comparing its hash against the ledger.
    * Returns the on-chain record if found, null if not registered.
    */
-  async verifyDocument(tenantId: string, documentId: string): Promise<OnChainRecord | null> {
+  async verifyDocument(
+    tenantId: string,
+    documentId: string,
+  ): Promise<OnChainRecord | null> {
     const result = await this.evaluateTransaction(
-      'VerifyDocument',
+      "VerifyDocument",
       tenantId,
       documentId,
     );
-    if (!result || result === 'null') return null;
+    if (!result || result === "null") return null;
     return this.parseResult<OnChainRecord>(result);
   }
 
@@ -98,9 +103,11 @@ export class DocumentRegistryContract extends TypedContract {
    * Revoke a document (marks as invalid, e.g., expired certificate).
    * Does NOT delete — immutable revocation record is added.
    */
-  async revokeDocument(args: DocumentRegistryArgs['revoke']): Promise<OnChainRecord> {
+  async revokeDocument(
+    args: DocumentRegistryArgs["revoke"],
+  ): Promise<OnChainRecord> {
     const result = await this.submitTransaction(
-      'RevokeDocument',
+      "RevokeDocument",
       JSON.stringify(args),
     );
     return this.parseResult<OnChainRecord>(result);
@@ -110,7 +117,10 @@ export class DocumentRegistryContract extends TypedContract {
    * Get all documents registered by a tenant.
    */
   async getTenantDocuments(tenantId: string): Promise<OnChainRecord[]> {
-    const result = await this.evaluateTransaction('GetTenantDocuments', tenantId);
+    const result = await this.evaluateTransaction(
+      "GetTenantDocuments",
+      tenantId,
+    );
     return this.parseResult<OnChainRecord[]>(result);
   }
 }
@@ -152,37 +162,57 @@ export interface FinanceLedgerArgs {
 }
 
 export class FinanceLedgerContract extends TypedContract {
-  async recordJournalEntry(args: FinanceLedgerArgs['journalEntry']): Promise<OnChainRecord> {
+  async recordJournalEntry(
+    args: FinanceLedgerArgs["journalEntry"],
+  ): Promise<OnChainRecord> {
     const result = await this.submitTransaction(
-      'RecordJournalEntry',
+      "RecordJournalEntry",
       JSON.stringify(args),
     );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async verifyJournalEntry(tenantId: string, journalId: string): Promise<OnChainRecord | null> {
-    const result = await this.evaluateTransaction('VerifyJournalEntry', tenantId, journalId);
-    if (!result || result === 'null') return null;
+  async verifyJournalEntry(
+    tenantId: string,
+    journalId: string,
+  ): Promise<OnChainRecord | null> {
+    const result = await this.evaluateTransaction(
+      "VerifyJournalEntry",
+      tenantId,
+      journalId,
+    );
+    if (!result || result === "null") return null;
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async attestPeriodClose(args: FinanceLedgerArgs['periodClose']): Promise<OnChainRecord> {
+  async attestPeriodClose(
+    args: FinanceLedgerArgs["periodClose"],
+  ): Promise<OnChainRecord> {
     const result = await this.submitTransaction(
-      'AttestPeriodClose',
+      "AttestPeriodClose",
       JSON.stringify(args),
     );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async getPeriodAttestation(tenantId: string, periodId: string): Promise<OnChainRecord | null> {
-    const result = await this.evaluateTransaction('GetPeriodAttestation', tenantId, periodId);
-    if (!result || result === 'null') return null;
+  async getPeriodAttestation(
+    tenantId: string,
+    periodId: string,
+  ): Promise<OnChainRecord | null> {
+    const result = await this.evaluateTransaction(
+      "GetPeriodAttestation",
+      tenantId,
+      periodId,
+    );
+    if (!result || result === "null") return null;
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async recordIntercompanyNetting(args: FinanceLedgerArgs['intercompanyNetting']): Promise<OnChainRecord> {
+  async recordIntercompanyNetting(
+    args: FinanceLedgerArgs["intercompanyNetting"],
+  ): Promise<OnChainRecord> {
     const result = await this.submitTransaction(
-      'RecordIntercompanyNetting',
+      "RecordIntercompanyNetting",
       JSON.stringify(args),
     );
     return this.parseResult<OnChainRecord>(result);
@@ -200,7 +230,12 @@ export interface SupplyChainArgs {
     asnId?: string;
     origin: { orgId: string; location: string; country: string };
     destination: { orgId: string; location: string; country: string };
-    goods: Array<{ productId: string; batchId?: string; quantity: number; unit: string }>;
+    goods: Array<{
+      productId: string;
+      batchId?: string;
+      quantity: number;
+      unit: string;
+    }>;
     expectedDelivery: string;
     createdBy: string;
     createdAt: string;
@@ -230,45 +265,74 @@ export interface SupplyChainArgs {
     batchId: string;
     productId: string;
     reason: string;
-    severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+    severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
     issuedBy: string;
     issuedAt: string;
   };
 }
 
 export class SupplyChainTraceabilityContract extends TypedContract {
-  async recordShipment(args: SupplyChainArgs['shipment']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('RecordShipment', JSON.stringify(args));
+  async recordShipment(
+    args: SupplyChainArgs["shipment"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "RecordShipment",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async transferCustody(args: SupplyChainArgs['custody']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('TransferCustody', JSON.stringify(args));
+  async transferCustody(
+    args: SupplyChainArgs["custody"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "TransferCustody",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async recordCheckpoint(args: SupplyChainArgs['checkpoint']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('RecordCheckpoint', JSON.stringify(args));
+  async recordCheckpoint(
+    args: SupplyChainArgs["checkpoint"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "RecordCheckpoint",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async verifyProvenance(tenantId: string, productId: string, batchId?: string): Promise<OnChainRecord[]> {
+  async verifyProvenance(
+    tenantId: string,
+    productId: string,
+    batchId?: string,
+  ): Promise<OnChainRecord[]> {
     const result = await this.evaluateTransaction(
-      'VerifyProvenance',
+      "VerifyProvenance",
       tenantId,
       productId,
-      batchId ?? '',
+      batchId ?? "",
     );
     return this.parseResult<OnChainRecord[]>(result);
   }
 
-  async issueRecall(args: SupplyChainArgs['recall']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('IssueRecall', JSON.stringify(args));
+  async issueRecall(args: SupplyChainArgs["recall"]): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "IssueRecall",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async getShipmentHistory(tenantId: string, shipmentId: string): Promise<OnChainRecord[]> {
-    const result = await this.evaluateTransaction('GetShipmentHistory', tenantId, shipmentId);
+  async getShipmentHistory(
+    tenantId: string,
+    shipmentId: string,
+  ): Promise<OnChainRecord[]> {
+    const result = await this.evaluateTransaction(
+      "GetShipmentHistory",
+      tenantId,
+      shipmentId,
+    );
     return this.parseResult<OnChainRecord[]>(result);
   }
 }
@@ -331,38 +395,72 @@ export interface ProcurementArgs {
 }
 
 export class ProcurementLifecycleContract extends TypedContract {
-  async createPurchaseOrder(args: ProcurementArgs['purchaseOrder']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('CreatePurchaseOrder', JSON.stringify(args));
+  async createPurchaseOrder(
+    args: ProcurementArgs["purchaseOrder"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "CreatePurchaseOrder",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async acceptPurchaseOrder(args: ProcurementArgs['vendorAcceptance']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('AcceptPurchaseOrder', JSON.stringify(args));
+  async acceptPurchaseOrder(
+    args: ProcurementArgs["vendorAcceptance"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "AcceptPurchaseOrder",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async confirmGoodsReceipt(args: ProcurementArgs['goodsReceipt']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('ConfirmGoodsReceipt', JSON.stringify(args));
+  async confirmGoodsReceipt(
+    args: ProcurementArgs["goodsReceipt"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "ConfirmGoodsReceipt",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async submitInvoice(args: ProcurementArgs['invoice']): Promise<OnChainRecord> {
-    const result = await this.submitTransaction('SubmitInvoice', JSON.stringify(args));
+  async submitInvoice(
+    args: ProcurementArgs["invoice"],
+  ): Promise<OnChainRecord> {
+    const result = await this.submitTransaction(
+      "SubmitInvoice",
+      JSON.stringify(args),
+    );
     return this.parseResult<OnChainRecord>(result);
   }
 
-  async executeThreeWayMatch(tenantId: string, poId: string): Promise<{
+  async executeThreeWayMatch(
+    tenantId: string,
+    poId: string,
+  ): Promise<{
     matched: boolean;
-    matchResult: 'FULL_MATCH' | 'PARTIAL_MATCH' | 'MISMATCH';
+    matchResult: "FULL_MATCH" | "PARTIAL_MATCH" | "MISMATCH";
     details: string;
     paymentAuthorized: boolean;
   }> {
-    const result = await this.submitTransaction('ExecuteThreeWayMatch', tenantId, poId);
+    const result = await this.submitTransaction(
+      "ExecuteThreeWayMatch",
+      tenantId,
+      poId,
+    );
     return this.parseResult(result);
   }
 
-  async getPurchaseOrderHistory(tenantId: string, poId: string): Promise<OnChainRecord[]> {
-    const result = await this.evaluateTransaction('GetPurchaseOrderHistory', tenantId, poId);
+  async getPurchaseOrderHistory(
+    tenantId: string,
+    poId: string,
+  ): Promise<OnChainRecord[]> {
+    const result = await this.evaluateTransaction(
+      "GetPurchaseOrderHistory",
+      tenantId,
+      poId,
+    );
     return this.parseResult<OnChainRecord[]>(result);
   }
 }
