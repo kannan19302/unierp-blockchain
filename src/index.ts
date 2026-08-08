@@ -1,5 +1,5 @@
 /**
- * @unerp/blockchain — Public API
+ * @kannan19302/blockchain — Public API
  *
  * Export everything needed by apps/api NestJS modules
  * to interact with the Hyperledger Fabric blockchain layer.
