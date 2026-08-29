@@ -1,6 +1,10 @@
 {
   "name": "@kannan19302/blockchain",
   "version": "1.0.3",
+  "packageManager": "pnpm@9.15.4",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "description": "UniERP Blockchain Integration — Hyperledger Fabric hybrid layer",
   "type": "module",
   "main": "./dist/index.js",
